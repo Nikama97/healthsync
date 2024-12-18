@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: patient-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: patient-service
+  template:
+    metadata:
+      labels:
+        app: patient-service
+    spec:
+      containers:
+        - name: appointment-service
+          image: gcr.io/cloud-445107/patient-service:latest
+          ports:
+            - containerPort: 8001
+          env:
+            - name: MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-secrets
+                  key: mongo-url
+            - name: REDSHIFT_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-secrets
+                  key: redshift-host
+            - name: REDSHIFT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-secrets
+                  key: redshift-user
+            - name: REDSHIFT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-secrets
+                  key: redshift-password

@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+pymongo
+python-dotenv
+psycopg2-binary
+pydantic[email]
+fastapi-utils
+typing-inspect
+httpx

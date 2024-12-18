@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: notification-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: notification-service
+  template:
+    metadata:
+      labels:
+        app: notification-service
+    spec:
+      containers:
+        - name: notification-service
+          image: gcr.io/cloud-445107/notification-service:latest
+          ports:
+            - containerPort: 8005
+          env:
+            - name: MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-secrets
+                  key: mongo-url
+            - name: REDSHIFT_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-secrets
+                  key: redshift-host
+            - name: REDSHIFT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-secrets
+                  key: redshift-user
+            - name: REDSHIFT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-secrets
+                  key: redshift-password

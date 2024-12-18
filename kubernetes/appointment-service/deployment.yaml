@@ -1,0 +1,40 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: appointment-service
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: appointment-service
+  template:
+    metadata:
+      labels:
+        app: appointment-service
+    spec:
+      containers:
+        - name: appointment-service
+          image: gcr.io/cloud-445107/appointment-service:latest
+          ports:
+            - containerPort: 8003
+          env:
+            - name: MONGO_URL
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-secrets
+                  key: mongo-url
+            - name: REDSHIFT_HOST
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-secrets
+                  key: redshift-host
+            - name: REDSHIFT_USER
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-secrets
+                  key: redshift-user
+            - name: REDSHIFT_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: healthsync-secrets
+                  key: redshift-password

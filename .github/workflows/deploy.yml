@@ -1,0 +1,101 @@
+name: Build and Deploy to GKE
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+env:
+  PROJECT_ID: ${{ secrets.GKE_PROJECT }}
+  GKE_CLUSTER: healthsync-cluster
+  GKE_ZONE: us-central1
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [ appointment_service, notification_service, patient_service ,analytics_service,doctor_service]
+        include:
+          - service: appointment_service
+            port: 8003
+            image_name: appointment-service
+
+          - service: notification_service
+            port: 8005
+            image_name: notification-service
+
+          - service: patient_service
+            port: 8001
+            image_name: patient-service
+
+          - service: analytics_service
+            port: 8004
+            image_name: analytics-service
+
+          - service: doctor_service
+            port: 8002
+            image_name: doctor-service
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      - name: Authenticate to Google Cloud
+        uses: google-github-actions/auth@v1
+        with:
+          credentials_json: ${{ secrets.GKE_SA_KEY }}
+
+      - name: Configure Docker
+        run: gcloud --quiet auth configure-docker
+
+      - name: Configure kubectl
+        uses: google-github-actions/get-gke-credentials@v1
+        with:
+          cluster_name: ${{ env.GKE_CLUSTER }}
+          location: ${{ env.GKE_ZONE }}
+
+      - name: Create Kubernetes Secrets
+        run: |
+          kubectl create secret generic healthsync-secrets \
+            --from-literal=mongo-url=${{ secrets.MONGO_URL }} \
+            --from-literal=redshift-host=${{ secrets.REDSHIFT_HOST }} \
+            --from-literal=redshift-user=${{ secrets.REDSHIFT_USER }} \
+            --from-literal=redshift-password=${{ secrets.REDSHIFT_PASSWORD }} \
+            --dry-run=client -o yaml | kubectl apply -f - 
+
+      - name: Build and Push Docker image
+        run: |
+          echo "Building service from: services/${{ matrix.service }}"
+          
+          # Build the Docker image
+          docker build \
+            --tag "gcr.io/$PROJECT_ID/${{ matrix.image_name }}:$GITHUB_SHA" \
+            --build-arg GITHUB_SHA="$GITHUB_SHA" \
+            --build-arg GITHUB_REF="$GITHUB_REF" \
+            services/${{ matrix.service }}
+          
+          # Push the Docker image
+          docker push "gcr.io/$PROJECT_ID/${{ matrix.image_name }}:$GITHUB_SHA"
+
+      - name: Deploy to GKE
+        run: |
+          sed -i "s|gcr.io/$PROJECT_ID/${{ matrix.image_name }}:latest|gcr.io/$PROJECT_ID/${{ matrix.image_name }}:$GITHUB_SHA|" \
+            kubernetes/${{ matrix.image_name }}/deployment.yaml
+          
+          kubectl apply -f kubernetes/${{ matrix.image_name }}/
+          kubectl rollout status deployment/${{ matrix.image_name }}
+
+      - name: Deploy Aggregator CronJob
+        run: |
+          # Build and push the aggregator image
+          docker build -t gcr.io/$PROJECT_ID/aggregator_service:$GITHUB_SHA services/aggregator_service
+          docker push gcr.io/$PROJECT_ID/aggregator_service:$GITHUB_SHA
+
+          # Replace 'latest' tag with GITHUB_SHA in CronJob YAML
+          sed -i "s|gcr.io/cloud-445107/aggregator_service:latest|gcr.io/$PROJECT_ID/aggregator_service:$GITHUB_SHA|" \
+            kubernetes/aggregator_service/cronjob.yaml
+
+          # Apply CronJob to GKE
+          kubectl apply -f kubernetes/aggregator_service/cronjob.yaml
