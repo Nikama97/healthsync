@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: analytics-service
-          image: gcr.io/cloud-445107/analytics-service:latest
+          image: gcr.io/healthsync-445122/analytics-service:latest
           ports:
             - containerPort: 8004
           env:

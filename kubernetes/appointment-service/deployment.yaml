@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: appointment-service
-          image: gcr.io/cloud-445107/appointment-service:latest
+          image: gcr.io/healthsync-445122/appointment-service:latest
           ports:
             - containerPort: 8003
           env:

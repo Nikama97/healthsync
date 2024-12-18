@@ -11,7 +11,7 @@ spec:
         spec:
           containers:
             - name: aggregator
-              image: gcr.io/cloud-445107/aggregator_service:latest
+              image: gcr.io/healthsync-445122/aggregator_service:latest
               env:
                 - name: MONGO_URL
                   valueFrom:

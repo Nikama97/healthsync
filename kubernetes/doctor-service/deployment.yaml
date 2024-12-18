@@ -14,7 +14,7 @@ spec:
     spec:
       containers:
         - name: doctor-service
-          image: gcr.io/cloud-445107/doctor-service:latest
+          image: gcr.io/healthsync-445122/doctor-service:latest
           ports:
             - containerPort: 8002
           env:

@@ -94,7 +94,7 @@ jobs:
           docker push gcr.io/$PROJECT_ID/aggregator_service:$GITHUB_SHA
 
           # Replace 'latest' tag with GITHUB_SHA in CronJob YAML
-          sed -i "s|gcr.io/cloud-445107/aggregator_service:latest|gcr.io/$PROJECT_ID/aggregator_service:$GITHUB_SHA|" \
+          sed -i "s|gcr.io/healthsync-445122/aggregator_service:latest|gcr.io/$PROJECT_ID/aggregator_service:$GITHUB_SHA|" \
             kubernetes/aggregator_service/cronjob.yaml
 
           # Apply CronJob to GKE
