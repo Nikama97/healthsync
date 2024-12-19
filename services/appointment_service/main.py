@@ -45,12 +45,12 @@ def validate_object_id(object_id: str):
 
 async def get_patient_details(patient_id: str):
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"http://127.0.0.1:8001/patients/{patient_id}")
+        response = await client.get(f"http://35.239.125.65:8001/patients/{patient_id}")
         return response.json()
 
 async def get_doctor_details(doctor_id: str):
     async with httpx.AsyncClient() as client:
-        response = await client.get(f"http://127.0.0.1:8002/doctors/{doctor_id}")
+        response = await client.get(f"http://34.71.62.106:8002/doctors/{doctor_id}")
         return response.json()
 
 # async def send_appointment_notification(
